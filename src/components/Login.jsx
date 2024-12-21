@@ -14,6 +14,7 @@ import Error from "./Error";
 import * as Yup from "yup";
 import useFetch from "@/hooks/use-fetch";
 import { login } from "@/dataBase/apiAuth";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Login = () => {
   const [errors, setErrors] = useState({});
@@ -21,6 +22,9 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const haveLink = searchParams.get("creatNew");
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -29,16 +33,14 @@ const Login = () => {
     }));
   };
 
-  //study this and move on...💓💓💓
+  //coustum hook for api calls
   const { data, error, loading, fn: fnLogin } = useFetch(login, formData);
 
-
-
-  useEffect(()=>{
-    if(!error){}
-
-  },[data,error])
-
+  useEffect(() => {
+    if (!error && data) { 
+      navigate(`/dashboard?${haveLink ? `createNew=${haveLink}` : ""}`);
+    }
+  }, [data, error]);
 
   const handleLogin = async () => {
     setErrors({});
@@ -52,6 +54,7 @@ const Login = () => {
           .required("Email is Required"),
       });
       await schema.validate(formData, { abortEarly: false });
+
       await fnLogin();
     } catch (error) {
       const newErrors = {};
@@ -72,6 +75,7 @@ const Login = () => {
           <CardDescription>
             Login to your account if already have one
           </CardDescription>
+          {error && <Error message={error.message} />}
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="space-y-1">
@@ -95,7 +99,7 @@ const Login = () => {
         </CardContent>
         <CardFooter>
           <Button onClick={handleLogin}>
-            {true ? <BeatLoader size={10} color="green" /> : "Login"}
+            {loading ? <BeatLoader size={10} color="green" /> : "Login"}
           </Button>
         </CardFooter>
       </Card>
